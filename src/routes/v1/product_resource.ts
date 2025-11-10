@@ -1,11 +1,12 @@
 import express, { NextFunction, Request, Response } from 'express';
 import Joi from 'joi';
-import { validate } from '../../middleware/middleware';
+import { pagination, validate } from '../../middleware/middleware';
 import { asyncMiddleware } from '../../middleware/error_middleware';
 import output from '../../utils/response';
 import { isAdmin } from '../../middleware/access_middleware';
 import { Category, Product, User } from '../../db/models';
 import cloudinaryUpload from '../../utils/file_upload';
+import { computePaginationRes } from '../../utils';
 
 const router = express.Router({ mergeParams: true });
 
@@ -69,5 +70,33 @@ router.post('/', isAdmin, cloudinaryUpload.single('image'), validate(productVali
 
     return output(res, 201, 'Product created successfully', newProduct, null);
 }));
+
+// Get all products
+router.get('/', pagination, asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+    const orderClause = Product.getOrderQuery(req.query);
+    const selectClause = Product.getSelectionQuery(req.query);
+
+    const products = await Product.findAndCountAll({
+        order: orderClause,
+        attributes: selectClause,
+        limit: res.locals.pagination.limit,
+        offset: res.locals.pagination.offset,
+        include: [
+            {
+                model: Category,
+                attributes: ['id', 'name'],
+            },
+        ],
+    });
+    return output(
+        res, 200, 'Products retrieved successfully',
+        computePaginationRes(
+            res.locals.pagination.page,
+            res.locals.pagination.limit,
+            products.count,
+            products.rows),
+        null);
+})
+);
 
 export default router;

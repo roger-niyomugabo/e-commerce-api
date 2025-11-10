@@ -25,25 +25,25 @@ export const checkEnvVars = (env_vars: string[]): string[] => {
  */
 export const processPagination = (page: number, count: number) => {
     const page_number: number = page ? page : 1;
-    const page_size: number = count ? count : 20;
+    const page_size: number = count ? count : 10;
 
     return { page: page_number, offset: (page_number - 1) * page_size, limit: page_size };
 };
 
 /**
  * Process pagination in order to return elements in pages and in a determinate count
- * @param {number} page requesting page
- * @param {number} pageSize all pages number
- * @param {number} count items in every page
- * @param {number} items all items
- * @return {object} Object with actual page, the total pages, the total items and the data (items)
+ * @param {number} page Current page number.
+ * @param {number} pageSize Number of items per page.
+ * @param {number} count Total number of items in the database.
+ * @param {number} items Items for the current page.
+ * @return {object} Object with currentPage, pageSize, totalPages, totalProducts, and products list.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const computePaginationRes = (page: number, pageSize: number, count: number, items: any[]) => {
     const realCount: number = count ? count : 0;
-    const totalPages: number = realCount ? Math.ceil(realCount / pageSize) : 1;
+    const totalPages = realCount ? Math.ceil(realCount / pageSize) : 1;
 
-    return { page: page, totalPages: totalPages, totalItems: realCount, items: items };
+    return { currentPage: page, pageSize: pageSize, totalPages: totalPages, totalItems: realCount, items: items };
 };
 
 /**
