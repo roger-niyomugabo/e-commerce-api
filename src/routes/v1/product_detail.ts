@@ -72,4 +72,18 @@ router.get('/', asyncMiddleware(async (req: Request, res: Response, next: NextFu
 })
 );
 
+// Product delete
+router.delete('/', isAdmin, asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+    const { productId } = req.params;
+
+    const productExist = await Product.findOne({ where: { id: productId } });
+    if (!productExist) {
+        return output(res, 404, 'Product not found', null, 'NOT_FOUND');
+    }
+    await productExist.destroy();
+
+    return output(res, 200, 'Product deleted successfully', null, null);
+})
+);
+
 export default router;
