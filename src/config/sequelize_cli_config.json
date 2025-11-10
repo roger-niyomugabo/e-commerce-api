@@ -1,0 +1,9 @@
+{
+  "development": {
+    "username": "e_commerce_user",
+    "password": "e_commerce_pass",
+    "database": "e_commerce_database",
+    "host": "e_commerce_db",
+    "dialect": "postgres"
+  }
+}
