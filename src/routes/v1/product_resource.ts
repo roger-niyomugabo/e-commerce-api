@@ -1,5 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import Joi from 'joi';
+import { Op } from 'sequelize';
 import { pagination, validate } from '../../middleware/middleware';
 import { asyncMiddleware } from '../../middleware/error_middleware';
 import output from '../../utils/response';
@@ -71,14 +72,38 @@ router.post('/', isAdmin, cloudinaryUpload.single('image'), validate(productVali
     return output(res, 201, 'Product created successfully', newProduct, null);
 }));
 
-// Get all products
+// Products search and list
 router.get('/', pagination, asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
     const orderClause = Product.getOrderQuery(req.query);
     const selectClause = Product.getSelectionQuery(req.query);
+    const whereClause = Product.getWhereQuery(req.query);
+
+    const searchQuery = req.query.search as string;
+
+    let searchCondition = {};
+    if (searchQuery && searchQuery.trim() !== '') {
+        searchCondition = {
+            name: {
+                [Op.iLike]: `%${searchQuery.trim()}%`,
+            },
+        };
+    }
+
+    let finalWhereClause = whereClause;
+    if (searchQuery && searchQuery.trim() !== '') {
+        if (whereClause) {
+            finalWhereClause = {
+                [Op.and]: [whereClause, searchCondition],
+            };
+        } else {
+            finalWhereClause = searchCondition;
+        }
+    }
 
     const products = await Product.findAndCountAll({
         order: orderClause,
         attributes: selectClause,
+        where: finalWhereClause,
         limit: res.locals.pagination.limit,
         offset: res.locals.pagination.offset,
         include: [
@@ -88,6 +113,7 @@ router.get('/', pagination, asyncMiddleware(async (req: Request, res: Response, 
             },
         ],
     });
+
     return output(
         res, 200, 'Products retrieved successfully',
         computePaginationRes(
@@ -96,7 +122,6 @@ router.get('/', pagination, asyncMiddleware(async (req: Request, res: Response, 
             products.count,
             products.rows),
         null);
-})
-);
+}));
 
 export default router;
