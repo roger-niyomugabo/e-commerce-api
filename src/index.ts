@@ -1,12 +1,12 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { Server } from 'http';
+import { seedAdmin } from './db/seed/admin.seeder';
 import { db } from './db';
 import createServer from './app';
 import { checkEnvVars } from './utils';
 import config from './config';
 import { logger } from './services/logger';
-// import tokenManager from "./services/token_manager";
 
 // initialize configuration
 dotenv.config();
@@ -30,6 +30,8 @@ let server: Server;
     await db.sync({ alter: (process.env.NODE_ENV === 'development' ? true : false) }).then(async () => {
         logger.info({ message: 'E-commerce database sync done' });
     });
+    // Seed admin user
+    await seedAdmin();
     // Load express app and start listening
     createServer(app);
     server = app.listen(port, () => {

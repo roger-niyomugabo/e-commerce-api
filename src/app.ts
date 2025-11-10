@@ -12,6 +12,8 @@ import health from './routes/health';
 import resource from './routes/resource';
 import test from './routes/testing_resources';
 import users_resource from './routes/v1/users_resource';
+import category_resource from './routes/v1/category_resource';
+import product_resource from './routes/v1/product_resource';
 
 const createServer = (app) => {
     app.disable('x-powered-by');
@@ -38,6 +40,8 @@ const createServer = (app) => {
 
     // Set other routes here
     app.use('/auth', users_resource, router.all('/', methodNotAllowedErrorHandler));
+    app.use('/category', category_resource, router.all('/', methodNotAllowedErrorHandler));
+    app.use('/products', product_resource, router.all('/', methodNotAllowedErrorHandler));
 
     // Middleware error handlers
     app.use(notFoundErrorHandler);

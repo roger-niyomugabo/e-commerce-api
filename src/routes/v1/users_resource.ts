@@ -61,7 +61,7 @@ const userLoginValidations = Joi.object({
 router.post('/login', validate(userLoginValidations), asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
     const { email, password } = req.body;
     const user = await User.findOne({ where: { email } });
-    if (!user || user.role !== 'user') {
+    if (!user) {
         return output(res, 400, 'Email not registered', null, 'BAD_REQUEST');
     }
     const isMatch = check(user.password, password);

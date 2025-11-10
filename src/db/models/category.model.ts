@@ -1,56 +1,25 @@
 /* eslint-disable @typescript-eslint/member-ordering */
 import {
-    Association,
     CreationOptional,
     DataTypes,
-    ForeignKey,
-    HasManyCreateAssociationMixin,
-    HasManyGetAssociationsMixin,
-    HasManySetAssociationsMixin,
     InferAttributes,
     InferCreationAttributes,
     Model,
-    NonAttribute,
     Sequelize } from 'sequelize';
 import { OrderClause, QueryParameterType, WhereAutoClause } from 'interfaces/sequelize_query_builder';
 import { buildOrderSequelizeFilters, buildSelectionSequelizeFilters, buildWhereSequelizeFilters } from '../../utils';
-import { User } from './user.model';
-import { Category } from './category.model';
 
-export class Product extends Model<
-InferAttributes<Product>,
-InferCreationAttributes<Product>
+export class Category extends Model<
+InferAttributes<Category>,
+InferCreationAttributes<Category>
 > {
     declare id: CreationOptional<string>;
     declare name: string;
-    declare description: string;
-    declare image: string;
-    declare price: number;
-    declare stock: number;
-    declare categoryId: ForeignKey<Category['id']>;
-    declare userId: ForeignKey<User['id']>;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
-    // Product belongs to user
-    declare user?: NonAttribute<User>;
-    declare getUser: HasManyGetAssociationsMixin<User>;
-    declare setUser: HasManySetAssociationsMixin<User, number>;
-    declare createUser: HasManyCreateAssociationMixin<User>;
-
-    // Product belongs to category
-    declare category?: NonAttribute<Category>;
-    declare getCategory: HasManyGetAssociationsMixin<Category>;
-    declare setCategory: HasManySetAssociationsMixin<Category, number>;
-    declare createCategory: HasManyCreateAssociationMixin<Category>;
-
-    declare static associations: {
-        User: Association<Product, User>;
-        Category: Association<Product, Category>;
-    };
-
-    static initModel(sequelize: Sequelize): typeof Product {
-        Product.init({
+    static initModel(sequelize: Sequelize): typeof Category {
+        Category.init({
             id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
@@ -62,22 +31,7 @@ InferCreationAttributes<Product>
             name: {
                 type: DataTypes.STRING,
                 allowNull: false,
-            },
-            description: {
-                type: DataTypes.STRING,
-                allowNull: false,
-            },
-            image: {
-                type: DataTypes.STRING,
-                allowNull: false,
-            },
-            price: {
-                type: DataTypes.INTEGER,
-                defaultValue: 0,
-            },
-            stock: {
-                type: DataTypes.INTEGER,
-                defaultValue: 0,
+                unique: true,
             },
             createdAt: {
                 type: DataTypes.DATE,
@@ -86,25 +40,21 @@ InferCreationAttributes<Product>
                 type: DataTypes.DATE,
             },
         }, {
-            modelName: 'product',
+            modelName: 'category',
             sequelize,
         });
 
-        return Product;
+        return Category;
     }
 
-    static selectionAllowedFields: string[] =
-        ['id', 'name', 'description', 'price', 'stock', 'createdAt', 'updatedAt'];
+    static selectionAllowedFields: string[] = ['id', 'name', 'createdAt', 'updatedAt'];
     static defaultSortFields: OrderClause[] = [
         ['name', 'asc'], ['createdAt', 'desc'],
     ];
-    static sortAllowedFields: string[] = ['name', 'description', 'price', 'stock', 'createdAt', 'updatedAt'];
+    static sortAllowedFields: string[] = ['name', 'createdAt', 'updatedAt'];
     static queryAllowedFields: { [field: string]: { type: QueryParameterType } } = {
         id: { type: 'string' },
         name: { type: 'string' },
-        description: { type: 'string' },
-        price: { type: 'number' },
-        stock: { type: 'number' },
         createdAt: { type: 'string' },
         updatedAt: { type: 'string' },
     };
