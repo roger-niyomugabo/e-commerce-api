@@ -60,4 +60,16 @@ router.put('/', isAdmin, validate(productUpdateValidations), asyncMiddleware(asy
     return output(res, 200, 'Product updated successfully', updatedProduct, null);
 }));
 
+// Get product details
+router.get('/', asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+    const { productId } = req.params;
+
+    const product = await Product.findOne({ where: { id: productId }, include: ['category'] });
+    if (!product) {
+        return output(res, 404, 'Product not found', null, 'NOT_FOUND');
+    }
+    return output(res, 200, 'Product retrieved successfully', product, null);
+})
+);
+
 export default router;
