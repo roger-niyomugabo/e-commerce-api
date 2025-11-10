@@ -4,7 +4,6 @@ const router = express.Router();
 import cors from 'cors';
 import config from './config';
 import { errorHandler, jsonParseErrorHandler, methodNotAllowedErrorHandler, notFoundErrorHandler, payloadTooLargeErrorHandler, uuidErrorHandler } from './middleware/error_middleware';
-// import { correlationId } from './middleware/middleware';
 import { errorLogger, requestLogger } from './middleware/logging_middleware';
 
 // Import controllers
@@ -14,6 +13,7 @@ import test from './routes/testing_resources';
 import users_resource from './routes/v1/users_resource';
 import category_resource from './routes/v1/category_resource';
 import product_resource from './routes/v1/product_resource';
+import product_detail from './routes/v1/product_detail';
 
 const createServer = (app) => {
     app.disable('x-powered-by');
@@ -42,6 +42,7 @@ const createServer = (app) => {
     app.use('/auth', users_resource, router.all('/', methodNotAllowedErrorHandler));
     app.use('/category', category_resource, router.all('/', methodNotAllowedErrorHandler));
     app.use('/products', product_resource, router.all('/', methodNotAllowedErrorHandler));
+    app.use('/products/:productId', product_detail, router.all('/', methodNotAllowedErrorHandler));
 
     // Middleware error handlers
     app.use(notFoundErrorHandler);
