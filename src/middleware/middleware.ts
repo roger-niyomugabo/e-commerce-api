@@ -31,12 +31,12 @@ export const validate = (schemaValidator: Joi.ObjectSchema) => {
         if (error) {
             const customErrors = error.details.map((err) => {
                 return {
-                    message: err.context.message,
+                    message: err.message,
                     param: err.context.label,
                     value: err.context.value,
                 };
             });
-            return res.status(422).json({
+            return res.status(400).json({
                 title: 'invalid data in request body',
                 errors: customErrors,
             });
