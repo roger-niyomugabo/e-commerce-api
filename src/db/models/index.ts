@@ -3,12 +3,14 @@ import { User } from './user.model';
 import { Product } from './product.model';
 import { Order } from './order.model';
 import { Category } from './category.model';
+import { OrderItem } from './orderItem.model';
 
 export {
     User,
     Product,
     Order,
-    Category
+    Category,
+    OrderItem
 };
 
 export function initModels(sequelize: Sequelize) {
@@ -16,6 +18,7 @@ export function initModels(sequelize: Sequelize) {
     Product.initModel(sequelize);
     Order.initModel(sequelize);
     Category.initModel(sequelize);
+    OrderItem.initModel(sequelize);
 
     // product associations
     Category.hasMany(Product, {
@@ -42,22 +45,34 @@ export function initModels(sequelize: Sequelize) {
     });
 
     // order associations
-    // Order.hasMany(Product, {
-    //     foreignKey: {
-    //         allowNull: false,
-    //     },
-    //     onDelete: 'CASCADE',
-    // });
-    // Product.belongsTo(Order, {
-    //     foreignKey: {
-    //         allowNull: false,
-    //     },
-    // });
+    OrderItem.belongsTo(Product, {
+        foreignKey: {
+            allowNull: false,
+        },
+    });
+    Product.hasMany(OrderItem, {
+        foreignKey: {
+            allowNull: false,
+        },
+        onDelete: 'CASCADE',
+    });
+    Order.hasMany(OrderItem, {
+        foreignKey: {
+            allowNull: false,
+        },
+        onDelete: 'CASCADE',
+    });
+    OrderItem.belongsTo(Order, {
+        foreignKey: {
+            allowNull: false,
+        },
+    });
 
     return {
         User,
         Product,
         Order,
+        OrderItem,
         Category,
     };
 }

@@ -14,32 +14,39 @@ import {
     Sequelize } from 'sequelize';
 import { OrderClause, QueryParameterType, WhereAutoClause } from 'interfaces/sequelize_query_builder';
 import { buildOrderSequelizeFilters, buildSelectionSequelizeFilters, buildWhereSequelizeFilters } from '../../utils';
-import { User } from './user.model';
+import { Product } from './product.model';
+import { Order } from './order.model';
 
-export class Order extends Model<
-InferAttributes<Order>,
-InferCreationAttributes<Order>
+export class OrderItem extends Model<
+InferAttributes<OrderItem>,
+InferCreationAttributes<OrderItem>
 > {
     declare id: CreationOptional<string>;
-    declare description?: string;
-    declare totalPrice: number;
-    declare status: string;
-    declare userId: ForeignKey<User['id']>;
+    declare orderId: ForeignKey<Order['id']>;
+    declare productId: ForeignKey<Product['id']>;
+    declare quantity: number;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
-    // Order belongs to user
-    declare user?: NonAttribute<User>;
-    declare getUser: HasManyGetAssociationsMixin<User>;
-    declare setUser: HasManySetAssociationsMixin<User, number>;
-    declare createUser: HasManyCreateAssociationMixin<User>;
+    // OrderItem belongs to product
+    declare product?: NonAttribute<Product>;
+    declare getProduct: HasManyGetAssociationsMixin<Product>;
+    declare setProduct: HasManySetAssociationsMixin<Product, number>;
+    declare createProduct: HasManyCreateAssociationMixin<Product>;
+
+    // OrderItem belongs to order
+    declare order?: NonAttribute<Order>;
+    declare getOrder: HasManyGetAssociationsMixin<Order>;
+    declare setOrder: HasManySetAssociationsMixin<Order, number>;
+    declare createOrder: HasManyCreateAssociationMixin<Order>;
 
     declare static associations: {
-        User: Association<Order, User>;
+        Product: Association<OrderItem, Product>;
+        Order: Association<OrderItem, Order>;
     };
 
-    static initModel(sequelize: Sequelize): typeof Order {
-        Order.init({
+    static initModel(sequelize: Sequelize): typeof OrderItem {
+        OrderItem.init({
             id: {
                 type: DataTypes.UUID,
                 primaryKey: true,
@@ -48,17 +55,9 @@ InferCreationAttributes<Order>
                 allowNull: false,
                 defaultValue: Sequelize.literal('gen_random_uuid()'),
             },
-            description: {
-                type: DataTypes.STRING,
-                allowNull: true,
-            },
-            totalPrice: {
+            quantity: {
                 type: DataTypes.INTEGER,
-                defaultValue: 0,
-            },
-            status: {
-                type: DataTypes.STRING,
-                allowNull: false,
+                defaultValue: 1,
             },
             createdAt: {
                 type: DataTypes.DATE,
@@ -67,24 +66,22 @@ InferCreationAttributes<Order>
                 type: DataTypes.DATE,
             },
         }, {
-            modelName: 'order',
+            modelName: 'orderItem',
             sequelize,
         });
 
-        return Order;
+        return OrderItem;
     }
 
     static selectionAllowedFields: string[] =
-        ['id', 'description', 'totalPrice', 'status', 'createdAt', 'updatedAt'];
+        ['id', 'quantity', 'createdAt', 'updatedAt'];
     static defaultSortFields: OrderClause[] = [
-        ['status', 'asc'], ['createdAt', 'desc'],
+        ['createdAt', 'desc'],
     ];
-    static sortAllowedFields: string[] = ['status', 'totalPrice', 'createdAt', 'updatedAt'];
+    static sortAllowedFields: string[] = ['quantity', 'createdAt', 'updatedAt'];
     static queryAllowedFields: { [field: string]: { type: QueryParameterType } } = {
         id: { type: 'string' },
-        description: { type: 'string' },
-        totalPrice: { type: 'number' },
-        status: { type: 'string' },
+        quantity: { type: 'number' },
         createdAt: { type: 'string' },
         updatedAt: { type: 'string' },
     };
