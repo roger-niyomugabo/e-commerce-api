@@ -1,7 +1,8 @@
 import express, { NextFunction, Request, Response } from 'express';
 import Joi from 'joi';
+import { computePaginationRes } from '../../utils';
 import { isUser } from '../../middleware/access_middleware';
-import { validate } from '../../middleware/middleware';
+import { pagination, validate } from '../../middleware/middleware';
 import { Order, OrderItem, Product, User } from '../../db/models';
 import { asyncMiddleware } from '../../middleware/error_middleware';
 import output from '../../utils/response';
@@ -11,8 +12,15 @@ import { db } from '../../db';
 const router = express.Router();
 
 const productValidations = Joi.object({
-    productId: Joi.string().uuid().required(),
-    quantity: Joi.number().required(),
+    productId: Joi.string().uuid().required().messages({
+        'string.base': 'ProductId must be a string',
+        'string.uuid': 'ProductId must be a valid UUID',
+        'any.required': 'ProductId is required',
+    }),
+    quantity: Joi.number().required().messages({
+        'number.base': 'Quantity must be a number',
+        'any.required': 'Quantity is required',
+    }),
     description: Joi.string().optional(),
 });
 
@@ -98,6 +106,49 @@ router.post('/', isUser, validate(productSoldValidations), asyncMiddleware(async
     });
 
     return output(res, 201, 'Order created successfully', newOrder, null);
+})
+);
+
+// Get all user's orders
+router.get('/', isUser, pagination, asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+    const orderClause = Order.getOrderQuery(req.query);
+    const whereClause = Order.getWhereQuery(req.query);
+
+    const { userId } = req.user;
+    const user = await User.findOne({ where: { id: userId } });
+    if (!user) {
+        return output(res, 404, 'User not found', null, 'NOT_FOUND');
+    }
+    const orders = await Order.findAndCountAll({
+        order: orderClause,
+        attributes: ['id', 'totalPrice', 'status', 'createdAt'],
+        where: { ...whereClause, userId },
+        include: [
+            {
+                model: OrderItem,
+                as: 'orderItems',
+                attributes: ['id', 'quantity'],
+                include: [
+                    {
+                        model: Product,
+                        as: 'product',
+                        attributes: ['id', 'name', 'price'],
+                    },
+                ],
+            },
+        ],
+        limit: res.locals.pagination.limit,
+        offset: res.locals.pagination.offset,
+    });
+
+    return output(
+        res, 200, 'Orders retrieved successfully',
+        computePaginationRes(
+            res.locals.pagination.page,
+            res.locals.pagination.limit,
+            orders.count,
+            orders.rows),
+        null);
 })
 );
 

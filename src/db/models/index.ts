@@ -45,6 +45,16 @@ export function initModels(sequelize: Sequelize) {
     });
 
     // order associations
+    User.hasMany(Order, {
+        foreignKey: {
+            allowNull: false,
+        },
+    });
+    Order.belongsTo(User, {
+        foreignKey: {
+            allowNull: false,
+        },
+    });
     OrderItem.belongsTo(Product, {
         foreignKey: {
             allowNull: false,

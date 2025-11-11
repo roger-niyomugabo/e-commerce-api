@@ -21,10 +21,10 @@ InferAttributes<Order>,
 InferCreationAttributes<Order>
 > {
     declare id: CreationOptional<string>;
+    declare userId: ForeignKey<User['id']>;
     declare description?: string;
     declare totalPrice: number;
     declare status: string;
-    declare userId: ForeignKey<User['id']>;
     declare createdAt: CreationOptional<Date>;
     declare updatedAt: CreationOptional<Date>;
 
