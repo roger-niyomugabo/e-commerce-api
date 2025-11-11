@@ -1,0 +1,190 @@
+paths:
+  /order:
+    post:
+      tags:
+        - Order
+      summary: Create a new order
+      description: Create a new order with multiple products. Validates stock availability and processes transaction.
+      operationId: createOrder
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrderCreateRequest'
+            examples:
+              singleProduct:
+                summary: Order with single product
+                value:
+                  orderData:
+                    - productId: "123e4567-e89b-12d3-a456-426614174002"
+                      quantity: 2
+                      description: "Blue color preferred"
+              multipleProducts:
+                summary: Order with multiple products
+                value:
+                  orderData:
+                    - productId: "123e4567-e89b-12d3-a456-426614174002"
+                      quantity: 1
+                    - productId: "123e4567-e89b-12d3-a456-426614174003"
+                      quantity: 3
+                      description: "Large size"
+      responses:
+        '201':
+          description: Order created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/OrderCreateResponse'
+              examples:
+                success:
+                  value:
+                    status: 201
+                    message: "Order created successfully"
+                    data:
+                      orderId: "123e4567-e89b-12d3-a456-426614174000"
+                      totalPrice: 299
+                      status: "pending"
+                      products:
+                        - id: "123e4567-e89b-12d3-a456-426614174002"
+                          name: "iPhone 15 Pro"
+                          price: 999
+                          quantity: 2
+                        - id: "123e4567-e89b-12d3-a456-426614174003"
+                          name: "AirPods Pro"
+                          price: 249
+                          quantity: 1
+                    error: null
+        '400':
+          description: Bad request - Validation error or insufficient stock
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emptyOrder:
+                  value:
+                    status: 400
+                    message: "Invalid request. Must be a non-empty array of products."
+                    data: null
+                    error: "BAD_REQUEST"
+                insufficientStock:
+                  value:
+                    status: 400
+                    message: "Insufficient stock for product: iPhone 15 Pro"
+                    data: null
+                    error: "BAD_REQUEST"
+                validationError:
+                  value:
+                    status: 400
+                    message: "Validation failed"
+                    data: null
+                    error: "ProductId must be a valid UUID"
+        '401':
+          description: Unauthorized - User authentication required
+        '404':
+          description: Not found - User or product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                userNotFound:
+                  value:
+                    status: 404
+                    message: "User not found"
+                    data: null
+                    error: "NOT_FOUND"
+                productNotFound:
+                  value:
+                    status: 404
+                    message: "Product not found: 123e4567-e89b-12d3-a456-426614174002"
+                    data: null
+                    error: "NOT_FOUND"
+        '500':
+          description: Internal server error
+
+    get:
+      tags:
+        - Order
+      summary: Get user's orders
+      description: Retrieve paginated list of orders for the authenticated user
+      operationId: getUserOrders
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Orders retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedOrders'
+              examples:
+                success:
+                  value:
+                    status: 200
+                    message: "Orders retrieved successfully"
+                    data:
+                      currentPage: 1
+                      pageSize: 10
+                      totalPages: 5
+                      totalOrders: 47
+                      orders:
+                        - id: "123e4567-e89b-12d3-a456-426614174000"
+                          totalPrice: 299
+                          status: "pending"
+                          createdAt: "2025-11-11T12:00:00Z"
+                          orderItems:
+                            - id: "123e4567-e89b-12d3-a456-426614174001"
+                              quantity: 2
+                              product:
+                                id: "123e4567-e89b-12d3-a456-426614174002"
+                                name: "iPhone 15 Pro"
+                                price: 999
+                            - id: "123e4567-e89b-12d3-a456-426614174003"
+                              quantity: 1
+                              product:
+                                id: "123e4567-e89b-12d3-a456-426614174004"
+                                name: "AirPods Pro"
+                                price: 249
+                        - id: "123e4567-e89b-12d3-a456-426614174005"
+                          totalPrice: 89
+                          status: "delivered"
+                          createdAt: "2025-11-10T10:00:00Z"
+                          orderItems:
+                            - id: "123e4567-e89b-12d3-a456-426614174006"
+                              quantity: 1
+                              product:
+                                id: "123e4567-e89b-12d3-a456-426614174007"
+                                name: "Phone Case"
+                                price: 29
+                    error: null
+        '401':
+          description: Unauthorized - User authentication required
+        '404':
+          description: User not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                userNotFound:
+                  value:
+                    status: 404
+                    message: "User not found"
+                    data: null
+                    error: "NOT_FOUND"
+        '500':
+          description: Internal server error

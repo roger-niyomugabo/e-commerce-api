@@ -7,6 +7,7 @@ import createServer from './app';
 import { checkEnvVars } from './utils';
 import config from './config';
 import { logger } from './services/logger';
+import { setupSwagger } from './docs/swagger';
 
 // initialize configuration
 dotenv.config();
@@ -40,6 +41,8 @@ let server: Server;
 })().catch(err => {
     logger.error({ message: 'Error on service startup:', meta: { error: err } });
 });
+
+setupSwagger(app);
 
 // Kill processes on process end
 const closeGracefully = async (signal) => {

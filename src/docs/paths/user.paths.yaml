@@ -1,0 +1,135 @@
+paths:
+  /auth/register:
+    post:
+      tags:
+        - User
+      summary: Register a new user
+      description: Create a new user account with username, email and password
+      operationId: registerUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserRegisterRequest'
+            examples:
+              validUser:
+                summary: Valid user registration
+                value:
+                  username: "john_doe"
+                  email: "john@example.com"
+                  password: "SecurePass123!"
+      responses:
+        '201':
+          description: User registered successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/User'
+              examples:
+                success:
+                  value:
+                    status: 201
+                    message: "Signed up successfully"
+                    data:
+                      id: 1
+                      username: "john_doe"
+                      email: "john@example.com"
+                      role: "user"
+                      createdAt: "2025-11-11T12:00:00Z"
+                      updatedAt: "2025-11-11T12:00:00Z"
+                    error: null
+        '400':
+          description: Bad request - Validation error or user already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                userExists:
+                  value:
+                    status: 400
+                    message: "Email or username already exists"
+                    data: null
+                    error: "BAD_REQUEST"
+                validationError:
+                  value:
+                    status: 400
+                    message: "Validation failed"
+                    data: null
+                    error: "Username must contain letters and numbers only, no special characters or spaces"
+        '500':
+          description: Internal server error
+
+  /auth/login:
+    post:
+      tags:
+        - User
+      summary: User login
+      description: Authenticate user and return JWT token
+      operationId: loginUser
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UserLoginRequest'
+            examples:
+              validLogin:
+                summary: Valid login credentials
+                value:
+                  email: "admin@gmail.com"
+                  password: "admin123"
+      responses:
+        '200':
+          description: Login successful
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/LoginSuccessResponse'
+              examples:
+                success:
+                  value:
+                    status: 200
+                    message: "Logged in successfully"
+                    data:
+                      token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                    error: null
+        '400':
+          description: Bad request - Email not registered
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                emailNotRegistered:
+                  value:
+                    status: 400
+                    message: "Email not registered"
+                    data: null
+                    error: "BAD_REQUEST"
+        '401':
+          description: Unauthorized - Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                invalidCredentials:
+                  value:
+                    status: 401
+                    message: "Invalid credentials"
+                    data: null
+                    error: "UNAUTHORIZED_ERROR"
+        '500':
+          description: Internal server error

@@ -1,0 +1,386 @@
+paths:
+  /products:
+    post:
+      tags:
+        - Product
+      summary: Create a new product
+      description: Create a new product (Admin only). Requires image upload and product details.
+      operationId: createProduct
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required:
+                - name
+                - description
+                - price
+                - stock
+                - categoryId
+                - image
+              properties:
+                name:
+                  type: string
+                  example: "iPhone 15 Pro"
+                description:
+                  type: string
+                  example: "Latest iPhone with advanced camera system"
+                price:
+                  type: number
+                  example: 999
+                stock:
+                  type: integer
+                  example: 50
+                categoryId:
+                  type: string
+                  format: uuid
+                  example: "123e4567-e89b-12d3-a456-426614174000"
+                image:
+                  type: string
+                  format: binary
+            examples:
+              validProduct:
+                summary: Valid product creation
+                value:
+                  name: "iPhone 15 Pro"
+                  description: "Latest iPhone with advanced camera system and A17 Pro chip"
+                  price: 999
+                  stock: 50
+                  categoryId: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '201':
+          description: Product created successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+              examples:
+                success:
+                  value:
+                    status: 201
+                    message: "Product created successfully"
+                    data:
+                      id: "123e4567-e89b-12d3-a456-426614174000"
+                      name: "iPhone 15 Pro"
+                      description: "Latest iPhone with advanced camera system"
+                      price: 999
+                      stock: 50
+                      image: "https://res.cloudinary.com/demo/image/upload/v1234567/iphone15.jpg"
+                      categoryId: "123e4567-e89b-12d3-a456-426614174000"
+                      userId: "123e4567-e89b-12d3-a456-426614174000"
+                      createdAt: "2025-11-11T12:00:00Z"
+                      updatedAt: "2025-11-11T12:00:00Z"
+                    error: null
+        '400':
+          description: Bad request - Validation error or product already exists
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                productExists:
+                  value:
+                    status: 400
+                    message: "Product already exists in this category"
+                    data: null
+                    error: "BAD_REQUEST"
+                categoryNotFound:
+                  value:
+                    status: 400
+                    message: "Category not found"
+                    data: null
+                    error: "BAD_REQUEST"
+                validationError:
+                  value:
+                    status: 400
+                    message: "Validation failed"
+                    data: null
+                    error: "Name must be at least 3 characters"
+        '401':
+          description: Unauthorized - Admin access required
+        '500':
+          description: Internal server error
+
+    get:
+      tags:
+        - Product
+      summary: Get all products with search and pagination
+      description: Retrieve paginated list of products with optional search. Results are cached for 5 minutes.
+      operationId: getProducts
+      parameters:
+        - name: search
+          in: query
+          schema:
+            type: string
+          description: Search products by name (case-insensitive partial match)
+        - name: page
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            default: 1
+          description: Page number for pagination
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 100
+            default: 10
+          description: Number of items per page
+        - name: sort
+          in: query
+          schema:
+            type: string
+          description: Sort field (e.g., name, price, createdAt)
+        - name: order
+          in: query
+          schema:
+            type: string
+            enum: [ASC, DESC]
+            default: ASC
+          description: Sort order
+      responses:
+        '200':
+          description: Products retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/PaginatedProducts'
+              examples:
+                success:
+                  value:
+                    status: 200
+                    message: "Products retrieved successfully"
+                    data:
+                      currentPage: 1
+                      pageSize: 10
+                      totalPages: 5
+                      totalProducts: 47
+                      products:
+                        - id: "123e4567-e89b-12d3-a456-426614174000"
+                          name: "iPhone 15 Pro"
+                          description: "Latest iPhone with advanced camera system"
+                          price: 999
+                          stock: 50
+                          image: "https://res.cloudinary.com/demo/image/upload/v1234567/iphone15.jpg"
+                          categoryId: "123e4567-e89b-12d3-a456-426614174000"
+                          userId: "123e4567-e89b-12d3-a456-426614174000"
+                          createdAt: "2025-11-11T12:00:00Z"
+                          updatedAt: "2025-11-11T12:00:00Z"
+                          category:
+                            id: "123e4567-e89b-12d3-a456-426614174000"
+                            name: "Electronics"
+                    error: null
+                cached:
+                  value:
+                    status: 200
+                    message: "Products retrieved successfully (from cache)"
+                    data:
+                      currentPage: 1
+                      pageSize: 10
+                      totalPages: 5
+                      totalProducts: 47
+                      products: [...]
+                    error: null
+        '500':
+          description: Internal server error
+
+  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: string
+          format: uuid
+        description: Product ID
+
+    get:
+      tags:
+        - Product
+      summary: Get product details
+      description: Retrieve detailed information about a specific product
+      operationId: getProductById
+      responses:
+        '200':
+          description: Product retrieved successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+              examples:
+                success:
+                  value:
+                    status: 200
+                    message: "Product retrieved successfully"
+                    data:
+                      id: "123e4567-e89b-12d3-a456-426614174000"
+                      name: "iPhone 15 Pro"
+                      description: "Latest iPhone with advanced camera system"
+                      price: 999
+                      stock: 50
+                      image: "https://res.cloudinary.com/demo/image/upload/v1234567/iphone15.jpg"
+                      categoryId: "123e4567-e89b-12d3-a456-426614174000"
+                      userId: "123e4567-e89b-12d3-a456-426614174000"
+                      createdAt: "2025-11-11T12:00:00Z"
+                      updatedAt: "2025-11-11T12:00:00Z"
+                      category:
+                        id: "123e4567-e89b-12d3-a456-426614174000"
+                        name: "Electronics"
+                    error: null
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    status: 404
+                    message: "Product not found"
+                    data: null
+                    error: "NOT_FOUND"
+        '500':
+          description: Internal server error
+
+    put:
+      tags:
+        - Product
+      summary: Update a product
+      description: Update product details (Admin only)
+      operationId: updateProduct
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductUpdateRequest'
+            examples:
+              validUpdate:
+                summary: Valid product update
+                value:
+                  name: "iPhone 15 Pro Updated"
+                  description: "Updated description for iPhone 15 Pro"
+                  price: 899
+                  stock: 75
+                  categoryId: "123e4567-e89b-12d3-a456-426614174000"
+      responses:
+        '200':
+          description: Product updated successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        $ref: '#/components/schemas/Product'
+              examples:
+                success:
+                  value:
+                    status: 200
+                    message: "Product updated successfully"
+                    data:
+                      id: "123e4567-e89b-12d3-a456-426614174000"
+                      name: "iPhone 15 Pro Updated"
+                      description: "Updated description for iPhone 15 Pro"
+                      price: 800
+                      stock: 75
+                      image: "https://res.cloudinary.com/demo/image/upload/v1234567/iphone15.jpg"
+                      categoryId: "123e4567-e89b-12d3-a456-426614174000"
+                      userId: "123e4567-e89b-12d3-a456-426614174000"
+                      createdAt: "2025-11-11T12:00:00Z"
+                      updatedAt: "2025-11-11T12:30:00Z"
+                    error: null
+        '400':
+          description: Bad request - Validation error
+        '401':
+          description: Unauthorized - Admin access required
+        '404':
+          description: Product or user not found
+          content:
+            application/json:
+              examples:
+                productNotFound:
+                  value:
+                    status: 404
+                    message: "Product does not exist"
+                    data: null
+                    error: "NOT_FOUND"
+                userNotFound:
+                  value:
+                    status: 404
+                    message: "User not found"
+                    data: null
+                    error: "NOT_FOUND"
+        '500':
+          description: Internal server error
+
+    delete:
+      tags:
+        - Product
+      summary: Delete a product
+      description: Delete a product (Admin only)
+      operationId: deleteProduct
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Product deleted successfully
+          content:
+            application/json:
+              schema:
+                allOf:
+                  - $ref: '#/components/schemas/ApiResponse'
+                  - type: object
+                    properties:
+                      data:
+                        type: object
+                        nullable: true
+              examples:
+                success:
+                  value:
+                    status: 200
+                    message: "Product deleted successfully"
+                    data: null
+                    error: null
+        '401':
+          description: Unauthorized - Admin access required
+        '404':
+          description: Product not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              examples:
+                notFound:
+                  value:
+                    status: 404
+                    message: "Product not found"
+                    data: null
+                    error: "NOT_FOUND"
+        '500':
+          description: Internal server error

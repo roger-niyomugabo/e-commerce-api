@@ -1,0 +1,151 @@
+components:
+  schemas:
+    Product:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        name:
+          type: string
+          example: "iPhone 15 Pro"
+        description:
+          type: string
+          example: "Latest iPhone with advanced camera system"
+        price:
+          type: number
+          format: float
+          example: 999
+        stock:
+          type: integer
+          example: 50
+        image:
+          type: string
+          example: "https://res.cloudinary.com/demo/image/upload/v1234567/iphone15.jpg"
+        categoryId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        userId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T12:00:00Z"
+        category:
+          $ref: '#/components/schemas/Category'
+
+    ProductCreateRequest:
+      type: object
+      required:
+        - name
+        - description
+        - price
+        - stock
+        - categoryId
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          example: "iPhone 15 Pro"
+        description:
+          type: string
+          minLength: 10
+          example: "Latest iPhone with advanced camera system and A17 Pro chip"
+        price:
+          type: number
+          minimum: 1
+          example: 999
+        stock:
+          type: integer
+          minimum: 0
+          example: 50
+        categoryId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    ProductUpdateRequest:
+      type: object
+      required:
+        - name
+        - description
+        - price
+        - stock
+        - categoryId
+      properties:
+        name:
+          type: string
+          minLength: 3
+          maxLength: 100
+          example: "iPhone 15 Pro Updated"
+        description:
+          type: string
+          minLength: 10
+          example: "Updated description for iPhone 15 Pro"
+        price:
+          type: number
+          minimum: 1
+          example: 899
+        stock:
+          type: integer
+          minimum: 0
+          example: 75
+        categoryId:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+
+    PaginatedProducts:
+      type: object
+      properties:
+        currentPage:
+          type: integer
+          example: 1
+        pageSize:
+          type: integer
+          example: 10
+        totalPages:
+          type: integer
+          example: 5
+        totalProducts:
+          type: integer
+          example: 47
+        products:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+        error:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+        error:
+          type: string

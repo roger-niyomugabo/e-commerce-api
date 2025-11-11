@@ -1,0 +1,95 @@
+components:
+  schemas:
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+          example: 1
+        username:
+          type: string
+          example: "john_doe"
+        email:
+          type: string
+          example: "john@example.com"
+        role:
+          type: string
+          enum: ["user", "admin"]
+          example: "user"
+        createdAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T12:00:00Z"
+        updatedAt:
+          type: string
+          format: date-time
+          example: "2025-11-11T12:00:00Z"
+
+    UserRegisterRequest:
+      type: object
+      required:
+        - username
+        - email
+        - password
+      properties:
+        username:
+          type: string
+          example: "john_doe"
+          description: "Alphanumeric username, no special characters or spaces"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          format: password
+          example: "SecurePass123!"
+          description: "Must be at least 8 characters with uppercase, lowercase, digit and special character"
+
+    UserLoginRequest:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          format: password
+          example: "SecurePass123!"
+
+    LoginSuccessResponse:
+      type: object
+      properties:
+        token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+    ApiResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+        error:
+          type: string
+          nullable: true
+
+    ErrorResponse:
+      type: object
+      properties:
+        status:
+          type: integer
+        message:
+          type: string
+        data:
+          type: object
+          nullable: true
+        error:
+          type: string
