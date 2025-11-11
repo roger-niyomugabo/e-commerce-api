@@ -1,6 +1,6 @@
 import express, { NextFunction, Request, Response } from 'express';
 import Joi from 'joi';
-import { Op } from 'sequelize';
+import { Op, WhereOptions } from 'sequelize';
 import { pagination, validate } from '../../middleware/middleware';
 import { asyncMiddleware } from '../../middleware/error_middleware';
 import output from '../../utils/response';
@@ -8,6 +8,7 @@ import { isAdmin } from '../../middleware/access_middleware';
 import { Category, Product, User } from '../../db/models';
 import cloudinaryUpload from '../../utils/file_upload';
 import { computePaginationRes } from '../../utils';
+import redis from '../../config/redis';
 
 const router = express.Router({ mergeParams: true });
 
@@ -74,30 +75,33 @@ router.post('/', isAdmin, cloudinaryUpload.single('image'), validate(productVali
 
 // Products search and list
 router.get('/', pagination, asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
+    const { limit, page } = res.locals.pagination;
     const orderClause = Product.getOrderQuery(req.query);
     const selectClause = Product.getSelectionQuery(req.query);
     const whereClause = Product.getWhereQuery(req.query);
 
-    const searchQuery = req.query.search as string;
+    const { search } = req.query;
 
-    let searchCondition = {};
-    if (searchQuery && searchQuery.trim() !== '') {
-        searchCondition = {
-            name: {
-                [Op.iLike]: `%${searchQuery.trim()}%`,
-            },
-        };
+    // Cache key based on query params
+    const cacheKey = `products:page=${page}:limit=${limit}:search=${search || ''}`;
+
+    // Check cache
+    const cachedData = await redis.get(cacheKey);
+    if (cachedData) {
+        const parsedData = JSON.parse(cachedData);
+        return output(res, 200, 'Products retrieved successfully (from cache)', parsedData, null);
     }
 
-    let finalWhereClause = whereClause;
-    if (searchQuery && searchQuery.trim() !== '') {
-        if (whereClause) {
-            finalWhereClause = {
-                [Op.and]: [whereClause, searchCondition],
-            };
-        } else {
-            finalWhereClause = searchCondition;
-        }
+    let finalWhereClause: WhereOptions = whereClause || {};
+
+    if (search && (search as string).trim() !== '') {
+        const searchCondition: WhereOptions = {
+            name: { [Op.iLike]: `%${(search as string).trim()}%` },
+        };
+
+        finalWhereClause = whereClause
+            ? { [Op.and]: [whereClause, searchCondition] }
+            : searchCondition;
     }
 
     const products = await Product.findAndCountAll({
@@ -112,16 +116,15 @@ router.get('/', pagination, asyncMiddleware(async (req: Request, res: Response, 
                 attributes: ['id', 'name'],
             },
         ],
+        distinct: true,
     });
 
-    return output(
-        res, 200, 'Products retrieved successfully',
-        computePaginationRes(
-            res.locals.pagination.page,
-            res.locals.pagination.limit,
-            products.count,
-            products.rows),
-        null);
+    const responseData = computePaginationRes(page, limit, products.count, products.rows);
+
+    // Cache result for 5 minutes
+    await redis.setex(cacheKey, 300, JSON.stringify(responseData));
+
+    return output(res, 200, 'Products retrieved successfully', responseData, null);
 }));
 
 export default router;
