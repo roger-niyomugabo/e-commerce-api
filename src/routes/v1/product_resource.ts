@@ -89,7 +89,7 @@ router.get('/', pagination, asyncMiddleware(async (req: Request, res: Response, 
     const cachedData = await redis.get(cacheKey);
     if (cachedData) {
         const parsedData = JSON.parse(cachedData);
-        return output(res, 200, 'Products retrieved successfully (from cache)', parsedData, null);
+        return output(res, 200, 'Products retrieved successfully', parsedData, null);
     }
 
     let finalWhereClause: WhereOptions = whereClause || {};

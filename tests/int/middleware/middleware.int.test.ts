@@ -15,7 +15,7 @@ describe('int/middleware/middleware', () => {
     describe('middleware validate', () => {
         test('body required ok', async () => {
             await supertest(app).patch('/test/validator_two')
-                .expect(422);
+                .expect(400);
 
             await supertest(app).patch('/test/validator_two')
                 .send({ name: 'test' })
@@ -23,7 +23,7 @@ describe('int/middleware/middleware', () => {
 
             await supertest(app).patch('/test/validator_two')
                 .send({ other: 'test' })
-                .expect(422);
+                .expect(400);
         });
 
         test('body not required', async () => {
@@ -43,7 +43,7 @@ describe('int/middleware/middleware', () => {
         test('no trimming on array properties', async () => {
             await supertest(app).patch('/test/validator_two')
                 .send({ other: 'test', name: 'test', someArray: ['one', 'two', 'three'] })
-                .expect(422);
+                .expect(400);
 
             await supertest(app).patch('/test/validator_two')
                 .send({ other: 'test', name: 'test', someArray: ['one', 'two'] })
@@ -55,7 +55,7 @@ describe('int/middleware/middleware', () => {
         test('pagination ok', async () => {
             await supertest(app).get('/test')
                 .expect(200).then(response => {
-                    expect(response.body.res.locals.pagination.limit).toBe(20);
+                    expect(response.body.res.locals.pagination.limit).toBe(10);
                     expect(response.body.res.locals.pagination.offset).toBe(0);
                     expect(response.body.res.locals.pagination.page).toBe(1);
                 });

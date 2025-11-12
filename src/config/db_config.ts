@@ -12,11 +12,11 @@ const db_config = {
     },
     // Hardcode test_env vars so test functions do not get into any other system
     'test': {
-        'username': 'e_commerce_user',
-        'password': 'e_commerce_pass',
-        'database': 'e_commerce_database',
-        'host': 'e_commerce_db',
-        'port': 5432,
+        'username': process.env.E_COMMERCE_TEST_DB_USER || 'postgres',
+        'password': process.env.E_COMMERCE_TEST_DB_PASSWORD || 'postgres',
+        'database': process.env.E_COMMERCE_TEST_DB_NAME || 'e_commerce_db',
+        'host': process.env.E_COMMERCE_TEST_DB_HOST || 'localhost',
+        'port': parseInt(process.env.E_COMMERCE_TEST_DB_PORT || '5432'),
         'dialect': 'postgres',
     },
     'production': {

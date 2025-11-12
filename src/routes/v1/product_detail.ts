@@ -4,7 +4,7 @@ import { validate } from '../../middleware/middleware';
 import { asyncMiddleware } from '../../middleware/error_middleware';
 import output from '../../utils/response';
 import { isAdmin } from '../../middleware/access_middleware';
-import { Product, User } from '../../db/models';
+import { Product } from '../../db/models';
 
 const router = express.Router({ mergeParams: true });
 
@@ -40,20 +40,13 @@ const productUpdateValidations = Joi.object({
 
 // Product update
 router.put('/', isAdmin, validate(productUpdateValidations), asyncMiddleware(async (req: Request, res: Response, next: NextFunction) => {
-    const { userId } = req.user;
     const { productId } = req.params;
 
-    const userPromise = User.findOne({ where: { id: userId } });
-    const productExistPromise = Product.findOne({ where: { id: productId } });
-    const [productExist, user] = await Promise.all([productExistPromise, userPromise]);
+    const productExist = await Product.findOne({ where: { id: productId } });
 
-    if (!user) {
-        return output(res, 404, 'User not found', null, 'NOT_FOUND');
-    }
     if (!productExist) {
         return output(res, 404, 'Product does not exist', null, 'NOT_FOUND');
     }
-
     await productExist.update(req.body);
     const updatedProduct = await Product.findOne({ where: { id: productId } });
 
