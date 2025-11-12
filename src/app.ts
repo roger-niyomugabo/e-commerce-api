@@ -5,6 +5,7 @@ import cors from 'cors';
 import config from './config';
 import { errorHandler, jsonParseErrorHandler, methodNotAllowedErrorHandler, notFoundErrorHandler, payloadTooLargeErrorHandler, uuidErrorHandler } from './middleware/error_middleware';
 import { errorLogger, requestLogger } from './middleware/logging_middleware';
+import { authLimiter, orderLimiter } from './middleware/rateLimit_middleware';
 
 // Import controllers
 import health from './routes/health';
@@ -40,11 +41,11 @@ const createServer = (app) => {
     app.use('/index', resource, router.all('/', methodNotAllowedErrorHandler));
 
     // Set other routes here
-    app.use('/auth', users_resource, router.all('/', methodNotAllowedErrorHandler));
+    app.use('/auth', authLimiter, users_resource, router.all('/', methodNotAllowedErrorHandler));
     app.use('/category', category_resource, router.all('/', methodNotAllowedErrorHandler));
     app.use('/products', product_resource, router.all('/', methodNotAllowedErrorHandler));
     app.use('/products/:productId', product_detail, router.all('/', methodNotAllowedErrorHandler));
-    app.use('/orders', order_resource, router.all('/', methodNotAllowedErrorHandler));
+    app.use('/orders', orderLimiter, order_resource, router.all('/', methodNotAllowedErrorHandler));
 
     // Middleware error handlers
     app.use(notFoundErrorHandler);
